@@ -55,7 +55,7 @@
 
 /* ------------------------------------------------------------------------- */
 
-#define AMF_PROP_IN_PTS          L"in_pts"
+#define AMF_PROP_IGNORE_PKT      L"ignore_pkt"
 #define SETTING_BITRATE          "bitrate"
 #define SETTING_BUF_SIZE         "buffer_size"
 #define SETTING_ENGINE           "engine"
@@ -111,6 +111,7 @@
 #define TEXT_QP_B_DELTA          obs_module_text("RCM.QPBDelta")
 #define TEXT_DEVICE_INDEX        obs_module_text("DeviceIndex")
 
+// Maybe unnecessery
 #define MS_TO_100NS      10000
 /* ------------------------------------------------------------------------- */
 void PrintProps(amf::AMFPropertyStorage *props)
@@ -247,6 +248,7 @@ typedef struct
 	DARRAY(uint8_t) packet;
 	int64_t pts;
 	bool keyframe;
+	bool ignore;
 } packetType;
 
 class VCEEncoder;
@@ -558,18 +560,35 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 
 darray VCEEncoder::GetHeader()
 {
+	//XXX Nasty hack. The whole thing. If only mEncoder->GetProperty(L"ExtraData") worked.
 	if (!mHdrPacket.num)
 	{
 		AMF_RESULT res;
 		amf::AMFSurfacePtr pSurf;
 		amf::AMFDataPtr data;
 
-		res = mContext->AllocSurface(amf::AMF_MEMORY_DX11, mParams.surf_fmt,
-				mParams.width, mParams.height, &pSurf);
+		// Optionally un-green the texture.
+		ComPtr<ID3D11DeviceContext> d3dcontext;
+		D3D11_MAPPED_SUBRESOURCE map;
+
+		mDeviceDX11.GetDevice()->GetImmediateContext(d3dcontext.Assign());
+		if (d3dcontext
+			&& SUCCEEDED(d3dcontext->Map(pTexture, 0,
+			D3D11_MAP::D3D11_MAP_WRITE, 0, &map)))
+		{
+			memset(map.pData, 0, map.RowPitch * mParams.height);
+			memset((uint8_t*)map.pData + map.RowPitch * mParams.height,
+				128, map.RowPitch * (mParams.height / 2));
+			d3dcontext->Unmap(pTexture, 0);
+			d3dcontext.Clear();
+		}
+
+		res = mContext->CreateSurfaceFromDX11Native(pTexture, &pSurf, nullptr);
 		if (res != AMF_OK)
 			return mHdrPacket.da;
 
-		pSurf->SetProperty(AMF_PROP_IN_PTS, (amf_int64)-1234);
+		pSurf->SetPts(0);
+		pSurf->SetProperty(AMF_PROP_IGNORE_PKT, true);
 		res = pSurf->SetProperty(AMF_VIDEO_ENCODER_FORCE_PICTURE_TYPE,
 				AMF_VIDEO_ENCODER_PICTURE_TYPE_IDR);
 		res = mEncoder->SubmitInput(pSurf);
@@ -677,7 +696,7 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	}
 
 	pSurf->SetPts(frame->pts * MS_TO_100NS);
-	pSurf->SetProperty(AMF_PROP_IN_PTS, frame->pts);
+	//pSurf->SetProperty(AMF_PROP_IGNORE_PKT, false);
 	if (mRequestKey)
 	{
 		pSurf->SetProperty(AMF_VIDEO_ENCODER_FORCE_PICTURE_TYPE,
@@ -698,8 +717,8 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	{
 		packetType pt = mPackets.front();
 		mPackets.pop();
-		// Remnants from header parsing
-		if (pt.pts == -1234)
+		//XXX Nasty hack. Remnants from header parsing
+		if (pt.ignore)
 			continue;
 		mSentPackets.push(pt);
 
@@ -775,7 +794,10 @@ void VCEEncoder::ProcessBitstream(amf::AMFBufferPtr buff, packetType &pt)
 	int frameType = -1;
 	buff->GetProperty(L"OutputDataType", &frameType);
 	pt.keyframe = (frameType == 0);
-	buff->GetProperty(AMF_PROP_IN_PTS, &(pt.pts));
+	pt.pts = buff->GetPts() / MS_TO_100NS;
+
+	pt.ignore = false;
+	buff->GetProperty(AMF_PROP_IGNORE_PKT, &pt.ignore);
 
 	da_init(pt.packet);
 	bool hasIDR = false;
@@ -1157,7 +1179,6 @@ static void load_headers(struct win_vceamf *vceamf)
 	if (!vceamf->context)
 		return;
 
-	//TODO Pre-parse in ProcessBitstream
 	darray hdr = vceamf->context->GetHeader();
 	if (!hdr.num)
 		return;
@@ -1184,6 +1205,7 @@ static void *win_vceamf_create(obs_data_t *settings, obs_encoder_t *encoder)
 			{
 				delete vceamf->context;
 				vceamf->context = nullptr;
+				warn("bad settings specified");
 			}
 		}
 		catch (VCEException &ex)
