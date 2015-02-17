@@ -23,6 +23,7 @@ find_package(Libavcodec QUIET)
 find_package(Libx264 QUIET)
 find_package(Libfdk QUIET)
 find_package(Qt5Core QUIET)
+find_package(AMDAMF QUIET)
 
 file(GLOB FFMPEG_BIN_FILES
 	"${FFMPEG_avcodec_INCLUDE_DIR}/../bin/avcodec-*.dll"
@@ -164,10 +165,12 @@ set(ALL_BASE_BIN_FILES
 	${QT_ICU_BIN_FILES})
 
 set(ALL_REL_BIN_FILES
-	${QT_BIN_FILES})
+	${QT_BIN_FILES}
+	${AMDAMF_BIN_FILES})
 
 set(ALL_DBG_BIN_FILES
-	${QT_DEBUG_BIN_FILES})
+	${QT_DEBUG_BIN_FILES}
+	${AMDAMF_DEBUG_BIN_FILES})
 
 set(ALL_PLATFORM_BIN_FILES)
 
