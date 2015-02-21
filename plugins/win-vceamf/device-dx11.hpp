@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <d3d11.h>
-#include <obs-module.h>
+#include <util/base.h>
 #include <util/windows/ComPtr.hpp>
 
 class DeviceDX11

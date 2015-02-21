@@ -36,7 +36,10 @@
 #include <core/Buffer.h>
 #include <core/Surface.h>
 #include "device-dx11.hpp"
+#include "device-ocl.hpp"
+#include "VersionHelpers.h" // Local copy
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define STR_FAILED_TO_SET_PROPERTY "Failed to set '%s' property."
 
 #define do_log(level, format, ...) \
@@ -83,6 +86,7 @@
 #define TEXT_ENGINE_HOST         obs_module_text("Engine.Host")
 #define TEXT_ENGINE_DX9          obs_module_text("Engine.DX9")
 #define TEXT_ENGINE_DX11         obs_module_text("Engine.DX11")
+#define TEXT_ENGINE_OCL          obs_module_text("Engine.OCL")
 #define TEXT_DISCARD_FILLER      obs_module_text("DiscardFiller")
 #define TEXT_BFRAMES             obs_module_text("BFrames")
 #define TEXT_PROFILE             obs_module_text("Profile")
@@ -223,6 +227,8 @@ struct AMFParams
 	AMF_VIDEO_ENCODER_PROFILE_ENUM profile;
 	AMF_VIDEO_ENCODER_USAGE_ENUM usage;
 	amf::AMF_SURFACE_FORMAT surf_fmt;
+	video_format video_fmt;
+
 	int profile_level;
 	char engine;
 	char quality;
@@ -315,7 +321,9 @@ private:
 	uint32_t mAlignedSurfaceHeight;
 	uint32_t mInBuffSize;
 	DeviceDX11 mDeviceDX11;
+	DeviceOCL  mDeviceOCL;
 	ComPtr<ID3D11Texture2D> pTexture;
+	uint8_t   *mHostPtr;
 	Observer mObserver;
 
 	DARRAY(uint8_t) mHdrPacket;
@@ -327,32 +335,34 @@ private:
 	pthread_mutex_t mPollerMutex;
 	os_event_t     *mStopEvent;
 	bool            mRequestKey;
+	bool            mWin8OrGreater;
 };
 
 VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
-	: pTexture(nullptr), mRequestKey(true)
+	: pTexture(nullptr)
+	, mRequestKey(true)
+	, mHostPtr(nullptr)
 {
 	AMF_RESULT res;
 	mParams = vceamf->params;
 	da_init(mHdrPacket);
-	//da_init(mPacketData);
+	mWin8OrGreater = IsWindows8OrGreater();
 
 	//simulate fail
 	//throw VCEException("simulate fail");
 
-	if (vceamf->params.engine != 2)
+	if (vceamf->params.engine == 1 || vceamf->params.engine > 3)
 		throw VCEException("Specified engine support is currently unimplemented");
 
 	if(!mDeviceDX11.Create(0, false))
 		throw VCEException("DeviceDX11::Create failed");
 
-	if (!CreateDX11Texture(pTexture.Assign()))
+	// Only Win8+
+	if (mWin8OrGreater && !CreateDX11Texture(pTexture.Assign()))
 		throw VCEException("CreateDX11Texture failed");
 
-	//OpenCL wants aligned surfaces
-	mAlignedSurfaceWidth = ((mParams.width + (256 - 1)) & ~(256 - 1));
-	mAlignedSurfaceHeight = (mParams.height + 31) & ~31;
-	mInBuffSize = mAlignedSurfaceWidth * mAlignedSurfaceHeight * 3 / 2;
+	if (mParams.engine == 3 && !mDeviceOCL.Create(mDeviceDX11.GetDevice()))
+		throw VCEException("DeviceOCL::Create failed");
 
 	res = AMFCreateContext(&mContext);
 	if (res != AMF_OK)
@@ -367,6 +377,13 @@ VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
 	res = mContext->InitDX11(mDeviceDX11.GetDevice(), amf::AMF_DX11_0);
 	if (res != AMF_OK)
 		throw VCEException("AMFContext::InitDX11 failed", res);
+
+	if (mParams.engine == 3)
+	{
+		res = mContext->InitOpenCL(mDeviceOCL.GetCommandQueue());
+		if (res != AMF_OK)
+			throw VCEException("AMFContext::InitOpenCL failed", res);
+	}
 
 	res = AMFCreateComponent(mContext, AMFVideoEncoderVCE_AVC, &mEncoder);
 	if(res != AMF_OK)
@@ -464,6 +481,7 @@ VCEEncoder::~VCEEncoder()
 	pTexture.Clear();
 	da_free(mHdrPacket);
 	ClearQueues();
+	delete[] mHostPtr;
 
 	os_event_destroy(mStopEvent);
 	pthread_mutex_destroy(&mPollerMutex);
@@ -473,10 +491,25 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 {
 	AMF_RESULT res = AMF_OK;
 	struct win_vceamf *vceamf = (struct win_vceamf *)mParams.vceamf;
+
+	if (mParams.engine != params.engine)
+	{
+		error("Cannot change engine type of an already initialized encoder context.");
+		return false;
+	}
+
 	if (mParams.surf_fmt != params.surf_fmt)
 	{
 		//TODO Right?
 		error("Cannot change surface format of an already initialized encoder context.");
+		return false;
+	}
+
+	if (mParams.engine == 3 &&
+			!mDeviceOCL.CreateImages(params.video_fmt, params.width, params.height))
+	{
+		error("Failed to create CL images of type %d, %dx%d.",
+				params.video_fmt, params.width, params.height);
 		return false;
 	}
 
@@ -507,7 +540,8 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 			(int)obs_data_get_int(settings, SETTING_BUF_SIZE) * 1000);
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_VBV_BUFFER_SIZE);
 
-	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_FRAMERATE, AMFConstructRate(params.fps_num, params.fps_den));
+	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_FRAMERATE,
+			AMFConstructRate(params.fps_num, params.fps_den));
 	RETURNIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_FRAMERATE);
 
 	int qp = (int)obs_data_get_int(settings, SETTING_QP_VALUE);
@@ -556,23 +590,25 @@ darray VCEEncoder::GetHeader()
 		amf::AMFSurfacePtr pSurf;
 		amf::AMFDataPtr data;
 
-		// Optionally un-green the texture.
-		ComPtr<ID3D11DeviceContext> d3dcontext;
-		D3D11_MAPPED_SUBRESOURCE map;
-
-		mDeviceDX11.GetDevice()->GetImmediateContext(d3dcontext.Assign());
-		if (d3dcontext
-			&& SUCCEEDED(d3dcontext->Map(pTexture, 0,
-				D3D11_MAP::D3D11_MAP_WRITE, 0, &map)))
+		if (mParams.video_fmt != VIDEO_FORMAT_NV12)
 		{
-			memset(map.pData, 0, map.RowPitch * mParams.height);
-			memset((uint8_t*)map.pData + map.RowPitch * mParams.height,
-				128, map.RowPitch * (mParams.height / 2));
-			d3dcontext->Unmap(pTexture, 0);
-			d3dcontext.Clear();
+			blog(LOG_ERROR, "Unimplemented surface format.");
+			return mHdrPacket.da;
 		}
 
-		res = mContext->CreateSurfaceFromDX11Native(pTexture, &pSurf, nullptr);
+		size_t y_size = mParams.width * mParams.height;
+		mHostPtr = new uint8_t[y_size * 3 / 2];
+
+		// Optionally un-green the buffer.
+		//if (mParams.video_fmt == VIDEO_FORMAT_NV12)
+		{
+			memset(mHostPtr, 0, y_size);
+			memset(mHostPtr + y_size, 128, y_size / 2);
+		}
+
+		res = mContext->CreateSurfaceFromHostNative(mParams.surf_fmt,
+			mParams.width, mParams.height, mParams.width, mParams.height,
+			mHostPtr, &pSurf, nullptr);
 		if (res != AMF_OK)
 			return mHdrPacket.da;
 
@@ -620,68 +656,121 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	AMF_RESULT res = AMF_OK;
 	amf::AMFSurfacePtr pSurf;
 
-	if (!pTexture)
+	if (mParams.engine == 2 && mWin8OrGreater)
 	{
-		blog(LOG_ERROR, "D3D11 texture is null.");
-		return false;
+		if (!pTexture)
+		{
+			blog(LOG_ERROR, "D3D11 texture is null.");
+			return false;
+		}
+
+		ID3D11DeviceContext *d3dcontext = nullptr;
+		mDeviceDX11.GetDevice()->GetImmediateContext(&d3dcontext);
+		if (!d3dcontext)
+		{
+			blog(LOG_ERROR, "Failed to get immediate D3D11 context.");
+			return false;
+		}
+
+		D3D11_MAPPED_SUBRESOURCE map;
+		HRESULT hr = d3dcontext->Map(pTexture, 0, D3D11_MAP::D3D11_MAP_WRITE/*_DISCARD*/, 0, &map);
+		if (hr == E_OUTOFMEMORY)
+		{
+			blog(LOG_ERROR, "Failed to map D3D11 texture: Out of memory.");
+			return false;
+		}
+
+		if (FAILED(hr))
+		{
+			blog(LOG_ERROR, "Failed to map D3D11 texture.");
+			return false;
+		}
+
+		uint8_t *ptr = (uint8_t *)map.pData;
+		uint8_t *src = frame->data[0];
+		size_t pitch = MIN(map.RowPitch, frame->linesize[0]);
+		for (int y = 0; y < mParams.height; y++)
+		{
+			memcpy(ptr, src, pitch);
+			ptr += map.RowPitch;
+			src += frame->linesize[0];
+		}
+
+		src = frame->data[1];
+		pitch = MIN(map.RowPitch, frame->linesize[1]);
+		for (int y = 0; y < mParams.height / 2; y++)
+		{
+			memcpy(ptr, src, pitch);
+			ptr += map.RowPitch;
+			src += frame->linesize[1];
+		}
+
+		d3dcontext->Unmap(pTexture, 0);
+		d3dcontext->Release();
+
+		res = mContext->CreateSurfaceFromDX11Native(pTexture, &pSurf, &mObserver);
+		if (res != AMF_OK)
+		{
+			blog(LOG_ERROR, "Failed to create surface from D3D11 texture.");
+			return false;
+		}
 	}
-/*
-	res = mContext->AllocSurface(amf::AMF_MEMORY_DX11, mParams.surf_fmt, mParams.width, mParams.height, &pSurf);
-	if (res != AMF_OK)
-		return false;*/
-
-	ID3D11DeviceContext *d3dcontext = nullptr;
-
-	mDeviceDX11.GetDevice()->GetImmediateContext(&d3dcontext);
-	if (!d3dcontext)
+	else if (mParams.engine == 3)
 	{
-		blog(LOG_ERROR, "Failed to get immediate D3D11 context.");
-		return false;
+		mDeviceOCL.WriteImages(mParams.width, mParams.height, frame->data, frame->linesize);
+
+		void *planes[2];
+		mDeviceOCL.GetPlanes(planes);
+		res = mContext->CreateSurfaceFromOpenCLNative(mParams.surf_fmt, mParams.width,
+			mParams.height, planes, &pSurf, &mObserver);
+		if (res != AMF_OK)
+		{
+			blog(LOG_ERROR, "Failed to create surface from OpenCl images.");
+			return false;
+		}
 	}
-
-	D3D11_MAPPED_SUBRESOURCE map;
-	HRESULT hr = d3dcontext->Map(pTexture, 0, D3D11_MAP::D3D11_MAP_WRITE/*_DISCARD*/, 0, &map);
-	if (hr == E_OUTOFMEMORY)
+	else
 	{
-		blog(LOG_ERROR, "Failed to map D3D11 texture: Out of memory.");
-		return false;
-	}
-	
-	if (FAILED(hr))
-	{
-		blog(LOG_ERROR, "Failed to map D3D11 texture.");
-		return false;
-	}
+		size_t y_size = mParams.width * mParams.height;
+		if (!mHostPtr)
+			mHostPtr = new uint8_t[y_size * 3 / 2];
 
-	uint8_t *ptr = (uint8_t *)map.pData;
-	uint8_t *src = frame->data[0];
-	for (int y = 0; y < mParams.height; y++)
-	{
-		memcpy(ptr, src, frame->linesize[0]);
-		ptr += map.RowPitch;
-		src += frame->linesize[0];
-	}
+		uint8_t *tmp = mHostPtr;
+		
+		if (frame->linesize[0] == mParams.width)
+		{
+			memcpy(tmp, frame->data[0], frame->linesize[0] * mParams.height);
+			memcpy(tmp + y_size, frame->data[1], frame->linesize[1] * mParams.height / 2);
+		}
+		else
+		{
+			uint8_t *src = frame->data[0];
+			size_t pitch = MIN(mParams.width, frame->linesize[0]);
+			for (int y = 0; mParams.height; y++)
+			{
+				memcpy(tmp, src, pitch);
+				tmp += mParams.width;
+				src += frame->linesize[0];
+			}
 
-	src = frame->data[1];
-	for (int y = 0; y < mParams.height / 2; y++)
-	{
-		memcpy(ptr, src, frame->linesize[1]);
-		ptr += map.RowPitch;
-		src += frame->linesize[1];
-	}
+			src = frame->data[1];
+			pitch = MIN(mParams.width, frame->linesize[1]);
+			for (int y = 0; mParams.height / 2; y++)
+			{
+				memcpy(tmp, src, pitch);
+				tmp += mParams.width;
+				src += frame->linesize[1];
+			}
+		}
 
-	d3dcontext->Unmap(pTexture, 0);
-
-	/*amf::AMFPlanePtr plane = pSurf->GetPlaneAt(0);
-	ID3D11Texture2D *tex = (ID3D11Texture2D *)plane->GetNative();
-	d3dcontext->CopyResource(tex, pTexture);*/
-	d3dcontext->Release();
-
-	res = mContext->CreateSurfaceFromDX11Native(pTexture, &pSurf, &mObserver);
-	if (res != AMF_OK)
-	{
-		blog(LOG_ERROR, "Failed to create surface from D3D texture.");
-		return false;
+		res = mContext->CreateSurfaceFromHostNative(mParams.surf_fmt,
+			mParams.width, mParams.height, mParams.width, mParams.height,
+			mHostPtr, &pSurf, &mObserver);
+		if (res != AMF_OK)
+		{
+			blog(LOG_ERROR, "Failed to create surface from host buffer.");
+			return false;
+		}
 	}
 
 	pSurf->SetPts(frame->pts * MS_TO_100NS);
@@ -702,6 +791,13 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	}
 
 	pthread_mutex_lock(&mPollerMutex);
+	while (!mSentPackets.empty())
+	{
+		packetType pt = mSentPackets.front();
+		mSentPackets.pop();
+		da_free(pt.packet);
+	}
+
 	while (!mPackets.empty())
 	{
 		packetType pt = mPackets.front();
@@ -724,7 +820,6 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 
 	return false;
 }
-
 
 void *VCEEncoder::Submit(void *ptr)
 {
@@ -910,7 +1005,7 @@ static void win_vceamf_defaults(obs_data_t *settings)
 	obs_data_set_default_int   (settings, SETTING_RCM,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CBR);
 	obs_data_set_default_int   (settings, SETTING_BFRAMES, 0);
-	obs_data_set_default_int   (settings, SETTING_ENGINE, 2);
+	obs_data_set_default_int   (settings, SETTING_ENGINE, 3);
 	obs_data_set_default_int   (settings, SETTING_PROFILE,
 			AMF_VIDEO_ENCODER_PROFILE_MAIN);
 	obs_data_set_default_int   (settings, SETTING_PROFILE_LEVEL, 41);
@@ -958,7 +1053,7 @@ static bool engine_type_modified(obs_properties_t *ppts, obs_property_t *p,
 	p = obs_properties_get(ppts, SETTING_DEVICE_INDEX);
 	obs_property_list_clear(p);
 
-	if (engine == 2)
+	if (!(engine == 1 || engine > 3))
 	{
 		DeviceDX11 device;
 		std::vector<std::string> adapters;
@@ -1017,6 +1112,7 @@ static obs_properties_t *win_vceamf_props(void *unused)
 
 	list = obs_properties_add_list(props, SETTING_ENGINE, TEXT_ENGINE_TYPE,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(list, TEXT_ENGINE_OCL, 3);
 	obs_property_list_add_int(list, TEXT_ENGINE_DX11, 2);
 	obs_property_list_add_int(list, TEXT_ENGINE_DX9,  1);
 	obs_property_list_add_int(list, TEXT_ENGINE_HOST, 0);
@@ -1137,6 +1233,7 @@ static void update_params(struct win_vceamf *vceamf, obs_data_t *settings,
 	//	vceamf->params.surf_fmt = amf::AMF_SURFACE_YUV420P;
 	else
 		vceamf->params.surf_fmt = amf::AMF_SURFACE_NV12;
+	vceamf->params.video_fmt = voi->format;
 	UNUSED_PARAMETER(params);
 }
 
