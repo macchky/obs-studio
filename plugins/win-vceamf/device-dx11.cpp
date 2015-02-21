@@ -9,8 +9,6 @@
 #define do_log(level, format, ...) \
 	blog(level, "[VCE AMF DX11] " format, ##__VA_ARGS__)
 
-#define SAFERELEASE(x) do{if(x){x->Release(); x = NULL;}}while(0)
-
 static inline uint32_t GetWinVer()
 {
 	OSVERSIONINFO ovi;

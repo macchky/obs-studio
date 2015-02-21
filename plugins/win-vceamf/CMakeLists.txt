@@ -1,14 +1,17 @@
 project(win-vceamf)
 
 find_package(AMDAMF) # REQUIRED)
+find_package(AMDAPP REQUIRED)
 IF(AMDAMF_FOUND)
-include_directories(${AMDAMF_INCLUDE_DIRS})
+include_directories(${AMDAMF_INCLUDE_DIRS}
+	${AMDAPP_INCLUDE_DIRS})
 
 set(win-vceamf_HEADERS
 	device-dx11.hpp
 	device-dx9.hpp
 	device-gl.hpp
-	device-ocl.hpp)
+	device-ocl.hpp
+	VersionHelpers.h)
 	
 set(win-vceamf_SOURCES
 	win-vceamf.cpp
@@ -27,6 +30,7 @@ target_link_libraries(win-vceamf
 	d3d11
 	dxgi
 	${AMDAMF_LIBRARIES}
+	${AMDAPP_LIBRARIES}
 	)
 
 install_obs_plugin_with_data(win-vceamf data)
