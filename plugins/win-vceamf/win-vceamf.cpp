@@ -35,7 +35,7 @@
 #include <components/VideoEncoderVCECaps.h>
 #include <core/Buffer.h>
 #include <core/Surface.h>
-#include "devicedx11.hpp"
+#include "device-dx11.hpp"
 
 #define STR_FAILED_TO_SET_PROPERTY "Failed to set '%s' property."
 
@@ -113,13 +113,12 @@
 
 // Maybe unnecessery
 #define MS_TO_100NS      10000
+
 /* ------------------------------------------------------------------------- */
 void PrintProps(amf::AMFPropertyStorage *props)
 {
-
-	amf::AMFBuffer* buffer = nullptr;
-	amf_int32 count = props->GetPropertyCount();
-	for (amf_int32 i = 0; i < count; i++)
+	amf_size count = props->GetPropertyCount();
+	for (amf_size i = 0; i < count; i++)
 	{
 		wchar_t wname[1024];
 		amf::AMFVariant var;
@@ -201,14 +200,6 @@ enum nal_unit_type_e
 	/* ref_idc == 0 for 6,9,10,11,12 */
 };
 
-enum nal_priority_e
-{
-	NAL_PRIORITY_DISPOSABLE = 0,
-	NAL_PRIORITY_LOW = 1,
-	NAL_PRIORITY_HIGH = 2,
-	NAL_PRIORITY_HIGHEST = 3,
-};
-
 class VCEException : public std::exception
 {
 public:
@@ -228,8 +219,6 @@ struct AMFParams
 	int height;
 	int fps_num;
 	int fps_den;
-	/*int bitrate;
-	int bufsize;*/
 
 	AMF_VIDEO_ENCODER_PROFILE_ENUM profile;
 	AMF_VIDEO_ENCODER_USAGE_ENUM usage;
@@ -276,7 +265,7 @@ class Observer : public amf::AMFSurfaceObserver
 public:
 	virtual void AMF_STD_CALL OnSurfaceDataRelease(amf::AMFSurface* pSurface)
 	{
-
+		UNUSED_PARAMETER(pSurface);
 	}
 
 	Observer() {}
@@ -515,21 +504,21 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_PEAK_BITRATE);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_VBV_BUFFER_SIZE,
-		(int)obs_data_get_int(settings, SETTING_BUF_SIZE) * 1000);
+			(int)obs_data_get_int(settings, SETTING_BUF_SIZE) * 1000);
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_VBV_BUFFER_SIZE);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_FRAMERATE, AMFConstructRate(params.fps_num, params.fps_den));
 	RETURNIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_FRAMERATE);
 
-	int qp = obs_data_get_int(settings, SETTING_QP_VALUE);
+	int qp = (int)obs_data_get_int(settings, SETTING_QP_VALUE);
 	int qpI, qpP, qpB, qpBDelta = 4;
 
 	if (obs_data_get_bool(settings, SETTING_QP_CUSTOM))
 	{
-		qpI = obs_data_get_int(settings, SETTING_QP_I);
-		qpP = obs_data_get_int(settings, SETTING_QP_P);
-		qpB = obs_data_get_int(settings, SETTING_QP_B);
-		qpBDelta = obs_data_get_int(settings, SETTING_QP_B_DELTA);
+		qpI = (int)obs_data_get_int(settings, SETTING_QP_I);
+		qpP = (int)obs_data_get_int(settings, SETTING_QP_P);
+		qpB = (int)obs_data_get_int(settings, SETTING_QP_B);
+		qpBDelta = (int)obs_data_get_int(settings, SETTING_QP_B_DELTA);
 	}
 	else
 	{
@@ -574,7 +563,7 @@ darray VCEEncoder::GetHeader()
 		mDeviceDX11.GetDevice()->GetImmediateContext(d3dcontext.Assign());
 		if (d3dcontext
 			&& SUCCEEDED(d3dcontext->Map(pTexture, 0,
-			D3D11_MAP::D3D11_MAP_WRITE, 0, &map)))
+				D3D11_MAP::D3D11_MAP_WRITE, 0, &map)))
 		{
 			memset(map.pData, 0, map.RowPitch * mParams.height);
 			memset((uint8_t*)map.pData + map.RowPitch * mParams.height,
@@ -628,7 +617,7 @@ darray VCEEncoder::GetHeader()
 
 bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *packet)
 {
-	AMF_RESULT res = AMF_OK, outRes = AMF_REPEAT;
+	AMF_RESULT res = AMF_OK;
 	amf::AMFSurfacePtr pSurf;
 
 	if (!pTexture)
@@ -728,8 +717,6 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 		packet->pts = pt.pts;
 		packet->dts = pt.pts;
 		packet->keyframe = pt.keyframe;
-		//blog(LOG_INFO, "Packet size: %d key: %d pts: %d",
-		//	pt.packet.num, pt.keyframe, pt.pts);
 		pthread_mutex_unlock(&mPollerMutex);
 		return true;
 	}
@@ -1036,7 +1023,7 @@ static obs_properties_t *win_vceamf_props(void *unused)
 	obs_property_set_modified_callback(list, engine_type_modified);
 
 	list = obs_properties_add_list(props, SETTING_DEVICE_INDEX, TEXT_DEVICE_INDEX,
-		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
 	list = obs_properties_add_list(props, SETTING_PROFILE, TEXT_PROFILE,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
@@ -1059,7 +1046,7 @@ static obs_properties_t *win_vceamf_props(void *unused)
 	//obs_property_list_add_int(list, "5.2", 52);
 
 	list = obs_properties_add_list(props, SETTING_QUALITY_PRESET, TEXT_QUALITY_PRESET,
-		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(list, TEXT_QUALITY_BALANCED,
 			AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED);
 	obs_property_list_add_int(list, TEXT_QUALITY_SPEED,
@@ -1113,7 +1100,8 @@ static const char *validate(struct win_vceamf *vceamf,
 
 static inline void set_param(struct win_vceamf *vceamf, const char *param)
 {
-
+	UNUSED_PARAMETER(vceamf);
+	UNUSED_PARAMETER(param);
 }
 
 static void log_vce(void *param, int level, const char *format, va_list args)
@@ -1149,6 +1137,7 @@ static void update_params(struct win_vceamf *vceamf, obs_data_t *settings,
 	//	vceamf->params.surf_fmt = amf::AMF_SURFACE_YUV420P;
 	else
 		vceamf->params.surf_fmt = amf::AMF_SURFACE_NV12;
+	UNUSED_PARAMETER(params);
 }
 
 static bool update_settings(struct win_vceamf *vceamf, obs_data_t *settings)
@@ -1168,8 +1157,6 @@ static bool win_vceamf_update(void *data, obs_data_t *settings)
 
 static void load_headers(struct win_vceamf *vceamf)
 {
-	
-	int             nal_count;
 	DARRAY(uint8_t) header;
 	DARRAY(uint8_t) sei;
 
@@ -1210,7 +1197,9 @@ static void *win_vceamf_create(obs_data_t *settings, obs_encoder_t *encoder)
 		}
 		catch (VCEException &ex)
 		{
-			warn("%s : %d", ex.what(), ex.result());
+			char res[128];
+			os_wcs_to_utf8(amf::AMFGetResultText(ex.result()), 0, res, sizeof(res));
+			warn("%s : %d", ex.what(), res);
 		}
 
 		if (vceamf->context == NULL)
@@ -1266,6 +1255,9 @@ static bool win_vceamf_extra_data(void *data, uint8_t **extra_data, size_t *size
 static bool win_vceamf_sei(void *data, uint8_t **sei, size_t *size)
 {
 	struct win_vceamf *vceamf = static_cast<struct win_vceamf *>(data);
+	UNUSED_PARAMETER(vceamf);
+	UNUSED_PARAMETER(sei);
+	UNUSED_PARAMETER(size);
 	return false;
 	/*if (!vceamf->context)
 		return false;

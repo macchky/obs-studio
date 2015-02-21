@@ -5,12 +5,18 @@ IF(AMDAMF_FOUND)
 include_directories(${AMDAMF_INCLUDE_DIRS})
 
 set(win-vceamf_HEADERS
-	devicedx11.hpp)
+	device-dx11.hpp
+	device-dx9.hpp
+	device-gl.hpp
+	device-ocl.hpp)
 	
 set(win-vceamf_SOURCES
 	win-vceamf.cpp
 	win-vceamf-plugin-main.cpp
-	devicedx11.cpp)
+	device-dx11.cpp
+	device-dx9.cpp
+	device-gl.cpp
+	device-ocl.cpp)
 
 add_library(win-vceamf MODULE
 	${win-vceamf_SOURCES}
@@ -18,6 +24,8 @@ add_library(win-vceamf MODULE
 target_link_libraries(win-vceamf
 	libobs
 	w32-pthreads
+	d3d11
+	dxgi
 	${AMDAMF_LIBRARIES}
 	)
 
