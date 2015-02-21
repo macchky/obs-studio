@@ -79,6 +79,7 @@
 #define SETTING_QP_B             "qp_b"
 #define SETTING_QP_B_DELTA       "qp_b_delta"
 #define SETTING_DEVICE_INDEX     "device_index"
+#define SETTING_KEYINT_SEC       "keyint_sec"
 
 #define TEXT_BITRATE             obs_module_text("Bitrate")
 #define TEXT_BUF_SIZE            obs_module_text("BufferSize")
@@ -114,6 +115,7 @@
 #define TEXT_QP_B                obs_module_text("RCM.QPB")
 #define TEXT_QP_B_DELTA          obs_module_text("RCM.QPBDelta")
 #define TEXT_DEVICE_INDEX        obs_module_text("DeviceIndex")
+#define TEXT_KEYINT_SEC          obs_module_text("KeyIntSeconds")
 
 // Maybe unnecessery
 #define MS_TO_100NS      10000
@@ -513,7 +515,11 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 		return false;
 	}
 
-	double idr = (double(params.fps_num) / double(params.fps_den)) * 2;
+	int keyint = (int)obs_data_get_int(settings, SETTING_KEYINT_SEC);
+	if (keyint == 0)
+		keyint = 2;
+
+	double idr = (double(params.fps_num) / double(params.fps_den)) * keyint;
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_IDR_PERIOD, idr);
 	RETURNIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_IDR_PERIOD);
 
@@ -1004,6 +1010,7 @@ static void win_vceamf_defaults(obs_data_t *settings)
 	obs_data_set_default_int   (settings, SETTING_QP_B_DELTA, 4);
 	obs_data_set_default_int   (settings, SETTING_RCM,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CBR);
+	obs_data_set_default_int   (settings, SETTING_KEYINT_SEC, 2);
 	obs_data_set_default_int   (settings, SETTING_BFRAMES, 0);
 	obs_data_set_default_int   (settings, SETTING_ENGINE, 3);
 	obs_data_set_default_int   (settings, SETTING_PROFILE,
@@ -1095,8 +1102,9 @@ static obs_properties_t *win_vceamf_props(void *unused)
 	p = obs_properties_add_int(props, SETTING_QP_B_DELTA, TEXT_QP_B_DELTA, 0, 51, 1);
 	//obs_property_set_visible(p, false);
 
-	p = obs_properties_add_int(props, SETTING_QP_MIN, TEXT_QP_MIN, 0, 51, 1);
-	p = obs_properties_add_int(props, SETTING_QP_MAX, TEXT_QP_MAX, 0, 51, 1);
+	obs_properties_add_int(props, SETTING_QP_MIN, TEXT_QP_MIN, 0, 51, 1);
+	obs_properties_add_int(props, SETTING_QP_MAX, TEXT_QP_MAX, 0, 51, 1);
+	obs_properties_add_int(props, SETTING_KEYINT_SEC, TEXT_KEYINT_SEC, 0, 20, 1);
 
 	list = obs_properties_add_list(props, SETTING_RCM, TEXT_RCM,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
