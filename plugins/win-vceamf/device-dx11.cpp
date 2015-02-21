@@ -1,13 +1,10 @@
-#include "devicedx11.hpp"
+#include "device-dx11.hpp"
 #include <util/platform.h>
 
 // libobs-d3d11 uses IDXGIFactory1. From MSDN:
 // Note  Do not mix the use of DXGI 1.0 (IDXGIFactory) and DXGI 1.1 (IDXGIFactory1) in an application.
 // Use IDXGIFactory or IDXGIFactory1, but not both in an application.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ff471318%28v=vs.85%29.aspx
-
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxgi.lib")
 
 #define do_log(level, format, ...) \
 	blog(level, "[VCE AMF DX11] " format, ##__VA_ARGS__)
