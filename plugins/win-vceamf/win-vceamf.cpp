@@ -810,7 +810,10 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 		mPackets.pop();
 		//XXX Nasty hack. Remnants from header parsing
 		if (pt.ignore)
+		{
+			da_free(pt.packet);
 			continue;
+		}
 		mSentPackets.push(pt);
 
 		packet->data = pt.packet.array;
