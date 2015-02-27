@@ -37,6 +37,7 @@
 #include <core/Surface.h>
 #include "device-dx11.hpp"
 #include "device-ocl.hpp"
+#include "conversion.hpp"
 #include "VersionHelpers.h" // Local copy
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -225,6 +226,7 @@ struct AMFParams
 	int height;
 	int fps_num;
 	int fps_den;
+	int adapter;
 
 	AMF_VIDEO_ENCODER_PROFILE_ENUM profile;
 	AMF_VIDEO_ENCODER_USAGE_ENUM usage;
@@ -356,12 +358,17 @@ VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
 	if (vceamf->params.engine == 1 || vceamf->params.engine > 3)
 		throw VCEException("Specified engine support is currently unimplemented");
 
-	if(!mDeviceDX11.Create(0, false))
-		throw VCEException("DeviceDX11::Create failed");
-
-	// Only Win8+
-	if (mWin8OrGreater && !CreateDX11Texture(pTexture.Assign()))
-		throw VCEException("CreateDX11Texture failed");
+	if (!mDeviceDX11.Create(mParams.adapter, false))
+	{
+		if (vceamf->params.engine != 0)
+			throw VCEException("DeviceDX11::Create failed");
+	}
+	else
+	{
+		// Only Win8+
+		if (mWin8OrGreater && !CreateDX11Texture(pTexture.Assign()))
+			throw VCEException("CreateDX11Texture failed");
+	}
 
 	if (mParams.engine == 3 && !mDeviceOCL.Create(mDeviceDX11.GetDevice()))
 		throw VCEException("DeviceOCL::Create failed");
@@ -376,15 +383,21 @@ VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
 		throw VCEException("Device type is not GS_DEVICE_DIRECT3D_11.", res);
 
 	graphics_t *gs = gs_get_context();*/
-	res = mContext->InitDX11(mDeviceDX11.GetDevice(), amf::AMF_DX11_0);
-	if (res != AMF_OK)
-		throw VCEException("AMFContext::InitDX11 failed", res);
 
-	if (mParams.engine == 3)
+	// If no AMD D3D11 device present, fallback to whatever AMF uses then
+	// and use plain memory buffers.
+	if (mDeviceDX11.Valid())
 	{
-		res = mContext->InitOpenCL(mDeviceOCL.GetCommandQueue());
+		res = mContext->InitDX11(mDeviceDX11.GetDevice(), amf::AMF_DX11_0);
 		if (res != AMF_OK)
-			throw VCEException("AMFContext::InitOpenCL failed", res);
+			throw VCEException("AMFContext::InitDX11 failed", res);
+
+		if (mParams.engine == 3)
+		{
+			res = mContext->InitOpenCL(mDeviceOCL.GetCommandQueue());
+			if (res != AMF_OK)
+				throw VCEException("AMFContext::InitOpenCL failed", res);
+		}
 	}
 
 	res = AMFCreateComponent(mContext, AMFVideoEncoderVCE_AVC, &mEncoder);
@@ -508,7 +521,7 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 	}
 
 	if (mParams.engine == 3 &&
-			!mDeviceOCL.CreateImages(params.video_fmt, params.width, params.height))
+		!mDeviceOCL.CreateImages(params.video_fmt, params.width, params.height))
 	{
 		error("Failed to create CL images of type %d, %dx%d.",
 				params.video_fmt, params.width, params.height);
@@ -603,6 +616,7 @@ darray VCEEncoder::GetHeader()
 		}
 
 		size_t y_size = mParams.width * mParams.height;
+		delete[] mHostPtr;
 		mHostPtr = new uint8_t[y_size * 3 / 2];
 
 		// Optionally un-green the buffer.
@@ -622,6 +636,10 @@ darray VCEEncoder::GetHeader()
 		pSurf->SetProperty(AMF_PROP_IGNORE_PKT, true);
 		res = pSurf->SetProperty(AMF_VIDEO_ENCODER_FORCE_PICTURE_TYPE,
 				AMF_VIDEO_ENCODER_PICTURE_TYPE_IDR);
+
+		amf_int64 hdrSpacing = 0;
+		mEncoder->GetProperty(AMF_VIDEO_ENCODER_HEADER_INSERTION_SPACING, &hdrSpacing);
+		mEncoder->SetProperty(AMF_VIDEO_ENCODER_HEADER_INSERTION_SPACING, 1);
 		res = mEncoder->SubmitInput(pSurf);
 
 		while (!mHdrPacket.num)
@@ -633,6 +651,8 @@ darray VCEEncoder::GetHeader()
 			if (res != AMF_INPUT_FULL && res != AMF_OK)
 				break;
 		}
+
+		mEncoder->SetProperty(AMF_VIDEO_ENCODER_HEADER_INSERTION_SPACING, hdrSpacing);
 
 		// EOFs despite ReInit
 		/*while (mEncoder->Drain() == AMF_INPUT_FULL)
@@ -692,24 +712,8 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 			return false;
 		}
 
-		uint8_t *ptr = (uint8_t *)map.pData;
-		uint8_t *src = frame->data[0];
-		size_t pitch = MIN(map.RowPitch, frame->linesize[0]);
-		for (int y = 0; y < mParams.height; y++)
-		{
-			memcpy(ptr, src, pitch);
-			ptr += map.RowPitch;
-			src += frame->linesize[0];
-		}
-
-		src = frame->data[1];
-		pitch = MIN(map.RowPitch, frame->linesize[1]);
-		for (int y = 0; y < mParams.height / 2; y++)
-		{
-			memcpy(ptr, src, pitch);
-			ptr += map.RowPitch;
-			src += frame->linesize[1];
-		}
+		CopyNV12(frame, (uint8_t *)map.pData, mParams.width, mParams.height,
+			map.RowPitch, mParams.height);
 
 		d3dcontext->Unmap(pTexture, 0);
 		d3dcontext->Release();
@@ -723,12 +727,13 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	}
 	else if (mParams.engine == 3)
 	{
-		mDeviceOCL.WriteImages(mParams.width, mParams.height, frame->data, frame->linesize);
+		mDeviceOCL.WriteImages(mParams.width, mParams.height,
+				frame->data, frame->linesize);
 
 		void *planes[2];
 		mDeviceOCL.GetPlanes(planes);
-		res = mContext->CreateSurfaceFromOpenCLNative(mParams.surf_fmt, mParams.width,
-			mParams.height, planes, &pSurf, &mObserver);
+		res = mContext->CreateSurfaceFromOpenCLNative(mParams.surf_fmt,
+			mParams.width, mParams.height, planes, &pSurf, &mObserver);
 		if (res != AMF_OK)
 		{
 			blog(LOG_ERROR, "Failed to create surface from OpenCl images.");
@@ -737,46 +742,16 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	}
 	else
 	{
-		size_t y_size = mParams.width * mParams.height;
-		if (!mHostPtr)
-			mHostPtr = new uint8_t[y_size * 3 / 2];
-
-		uint8_t *tmp = mHostPtr;
-		
-		if (frame->linesize[0] == mParams.width)
-		{
-			memcpy(tmp, frame->data[0], frame->linesize[0] * mParams.height);
-			memcpy(tmp + y_size, frame->data[1], frame->linesize[1] * mParams.height / 2);
-		}
-		else
-		{
-			uint8_t *src = frame->data[0];
-			size_t pitch = MIN(mParams.width, frame->linesize[0]);
-			for (int y = 0; mParams.height; y++)
-			{
-				memcpy(tmp, src, pitch);
-				tmp += mParams.width;
-				src += frame->linesize[0];
-			}
-
-			src = frame->data[1];
-			pitch = MIN(mParams.width, frame->linesize[1]);
-			for (int y = 0; mParams.height / 2; y++)
-			{
-				memcpy(tmp, src, pitch);
-				tmp += mParams.width;
-				src += frame->linesize[1];
-			}
-		}
-
-		res = mContext->CreateSurfaceFromHostNative(mParams.surf_fmt,
-			mParams.width, mParams.height, mParams.width, mParams.height,
-			mHostPtr, &pSurf, &mObserver);
+		res = mContext->AllocSurface(amf::AMF_MEMORY_HOST, mParams.surf_fmt,
+			mParams.width, mParams.height, &pSurf);
 		if (res != AMF_OK)
 		{
 			blog(LOG_ERROR, "Failed to create surface from host buffer.");
 			return false;
 		}
+		amf::AMFPlanePtr plane = pSurf->GetPlaneAt(0);
+		CopyNV12(frame, (uint8_t*)plane->GetNative(), mParams.width,
+			mParams.height, plane->GetHPitch(), plane->GetVPitch());
 	}
 
 	pSurf->SetPts(frame->pts * MS_TO_100NS);
@@ -924,14 +899,8 @@ void VCEEncoder::ProcessBitstream(amf::AMFBufferPtr buff, packetType &pt)
 		start = next;
 	}
 
-	static bool shutup = false;
 	if (!hasIDR)
 		da_free(mHdrPacket);
-	else if (!shutup)
-	{
-		blog(LOG_INFO, "Got SPS/PPS/IDR nals");
-		shutup = true;
-	}
 }
 
 bool VCEEncoder::CreateDX11Texture(ID3D11Texture2D **pTex)
@@ -960,7 +929,7 @@ bool VCEEncoder::CreateDX11Texture(ID3D11Texture2D **pTex)
 	mDeviceDX11.GetDevice()->GetImmediateContext(&d3dcontext);
 	if (!d3dcontext)
 	{
-		blog(LOG_ERROR, "Failed to get immediate D3D11 context.");
+		blog(LOG_ERROR, "Failed to get D3D11 immediate context.");
 		return false;
 	}
 
@@ -1232,6 +1201,7 @@ static void update_params(struct win_vceamf *vceamf, obs_data_t *settings,
 	vceamf->params.profile = (AMF_VIDEO_ENCODER_PROFILE_ENUM)
 			obs_data_get_int(settings, SETTING_PROFILE);
 	vceamf->params.profile_level = (int)obs_data_get_int(settings, SETTING_PROFILE_LEVEL);
+	vceamf->params.adapter = (int)obs_data_get_int(settings, SETTING_DEVICE_INDEX);
 
 	vceamf->params.fps_num = voi->fps_num;
 	vceamf->params.fps_den = voi->fps_den;
@@ -1342,7 +1312,6 @@ static bool win_vceamf_encode(void *data, struct encoder_frame *frame,
 	if (frame)
 	{
 		*received_packet = encoder->Encode(frame, packet);
-		info("Received packet: %d", *received_packet);
 	}
 
 	return true;
@@ -1392,7 +1361,7 @@ static bool win_vceamf_video_info(void *data, struct video_scale_info *info)
 	info->format     = VIDEO_FORMAT_NV12;
 	info->width      = vid_info->width;
 	info->height     = vid_info->height;
-	//TODO VIDEO_RANGE_PARTIAL
+	//TODO VIDEO_RANGE_PARTIAL or FULL?
 	info->range      = VIDEO_RANGE_PARTIAL;
 	info->colorspace = VIDEO_CS_709;
 

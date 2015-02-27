@@ -11,6 +11,7 @@ set(win-vceamf_HEADERS
 	device-dx9.hpp
 	device-gl.hpp
 	device-ocl.hpp
+	conversion.hpp
 	VersionHelpers.h)
 	
 set(win-vceamf_SOURCES
@@ -19,7 +20,8 @@ set(win-vceamf_SOURCES
 	device-dx11.cpp
 	device-dx9.cpp
 	device-gl.cpp
-	device-ocl.cpp)
+	device-ocl.cpp
+	conversion.cpp)
 
 add_library(win-vceamf MODULE
 	${win-vceamf_SOURCES}
