@@ -1246,7 +1246,10 @@ static void load_headers(struct win_vceamf *vceamf)
 
 	darray hdr = vceamf->context->GetHeader();
 	if (!hdr.num)
+	{
+		error("Failed to get headers.");
 		return;
+	}
 
 	da_push_back_array(header, hdr.array, hdr.num);
 	vceamf->extra_data      = header.array;
