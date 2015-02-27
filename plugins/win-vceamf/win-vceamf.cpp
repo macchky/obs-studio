@@ -1205,8 +1205,8 @@ static void update_params(struct win_vceamf *vceamf, obs_data_t *settings,
 
 	vceamf->params.fps_num = voi->fps_num;
 	vceamf->params.fps_den = voi->fps_den;
-	vceamf->params.width = voi->width;
-	vceamf->params.height = voi->height;
+	vceamf->params.width = (int)obs_encoder_get_width(vceamf->encoder);
+	vceamf->params.height = (int)obs_encoder_get_height(vceamf->encoder);
 
 	if (voi->format == VIDEO_FORMAT_NV12)
 		vceamf->params.surf_fmt = amf::AMF_SURFACE_NV12;
