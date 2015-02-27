@@ -10,8 +10,6 @@ macro(getenv_path VAR)
 	set(ENV_${VAR} $ENV{${VAR}})
 	# replace won't work if var is blank
 	if (ENV_${VAR})
-		#Didn't work for me
-		#string( REGEX REPLACE "\\\\" "/" ENV_${VAR} ${ENV_${VAR}} )
 		string( REGEX REPLACE "\\\\" "/" ${VAR} ${ENV_${VAR}} )
 	endif ()
 endmacro(getenv_path)
