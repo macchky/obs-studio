@@ -26,6 +26,11 @@ public:
 		return mDevice;
 	}
 
+	bool Valid()
+	{
+		return mDevice != nullptr;
+	}
+
 private:
 	ComPtr<ID3D11Device> mDevice;
 	std::vector<uint32_t> mAdapters;

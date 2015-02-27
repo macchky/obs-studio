@@ -114,6 +114,9 @@ bool DeviceOCL::CreateImages(enum video_format format, size_t width, size_t heig
 	mAlignedW = ((width + (256 - 1)) & ~(256 - 1));
 	mAlignedH = (height + 31) & ~31;
 
+	delete mImageY;
+	delete mImageUV;
+
 	if (format == VIDEO_FORMAT_NV12)
 	{
 		mImageY = new cl::Image2D(*mContext, CL_MEM_WRITE_ONLY,
