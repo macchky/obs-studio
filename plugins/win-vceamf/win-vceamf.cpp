@@ -207,6 +207,15 @@ enum nal_unit_type_e
 	/* ref_idc == 0 for 6,9,10,11,12 */
 };
 
+enum EngineType
+{
+	ENGINE_HOST,
+	ENGINE_DX9,
+	ENGINE_DX11,
+	ENGINE_OPENCL,
+	ENGINE_OPENGL,
+};
+
 class VCEException : public std::exception
 {
 public:
@@ -355,12 +364,12 @@ VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
 	//simulate fail
 	//throw VCEException("simulate fail");
 
-	if (vceamf->params.engine == 1 || vceamf->params.engine > 3)
+	if (vceamf->params.engine == ENGINE_DX9 || vceamf->params.engine > ENGINE_OPENCL)
 		throw VCEException("Specified engine support is currently unimplemented");
 
 	if (!mDeviceDX11.Create(mParams.adapter, false))
 	{
-		if (vceamf->params.engine != 0)
+		if (vceamf->params.engine != ENGINE_HOST)
 			throw VCEException("DeviceDX11::Create failed");
 	}
 	else
@@ -370,7 +379,7 @@ VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
 			throw VCEException("CreateDX11Texture failed");
 	}
 
-	if (mParams.engine == 3 && !mDeviceOCL.Create(mDeviceDX11.GetDevice()))
+	if (mParams.engine == ENGINE_OPENCL && !mDeviceOCL.Create(mDeviceDX11.GetDevice()))
 		throw VCEException("DeviceOCL::Create failed");
 
 	res = AMFCreateContext(&mContext);
@@ -392,7 +401,7 @@ VCEEncoder::VCEEncoder(win_vceamf *vceamf) //(AMFParams &params)
 		if (res != AMF_OK)
 			throw VCEException("AMFContext::InitDX11 failed", res);
 
-		if (mParams.engine == 3)
+		if (mParams.engine == ENGINE_OPENCL)
 		{
 			res = mContext->InitOpenCL(mDeviceOCL.GetCommandQueue());
 			if (res != AMF_OK)
@@ -520,7 +529,7 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 		return false;
 	}
 
-	if (mParams.engine == 3 &&
+	if (mParams.engine == ENGINE_OPENCL &&
 		!mDeviceOCL.CreateImages(params.video_fmt, params.width, params.height))
 	{
 		error("Failed to create CL images of type %d, %dx%d.",
@@ -682,7 +691,7 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 	AMF_RESULT res = AMF_OK;
 	amf::AMFSurfacePtr pSurf;
 
-	if (mParams.engine == 2 && mWin8OrGreater)
+	if (mParams.engine == ENGINE_DX11 && mWin8OrGreater)
 	{
 		if (!pTexture)
 		{
@@ -725,7 +734,7 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 			return false;
 		}
 	}
-	else if (mParams.engine == 3)
+	else if (mParams.engine == ENGINE_OPENCL)
 	{
 		mDeviceOCL.WriteImages(mParams.width, mParams.height,
 				frame->data, frame->linesize);
@@ -984,7 +993,7 @@ static void win_vceamf_defaults(obs_data_t *settings)
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CBR);
 	obs_data_set_default_int   (settings, SETTING_KEYINT_SEC, 2);
 	obs_data_set_default_int   (settings, SETTING_BFRAMES, 0);
-	obs_data_set_default_int   (settings, SETTING_ENGINE, 3);
+	obs_data_set_default_int   (settings, SETTING_ENGINE, ENGINE_OPENCL);
 	obs_data_set_default_int   (settings, SETTING_PROFILE,
 			AMF_VIDEO_ENCODER_PROFILE_MAIN);
 	obs_data_set_default_int   (settings, SETTING_PROFILE_LEVEL, 41);
@@ -1032,7 +1041,7 @@ static bool engine_type_modified(obs_properties_t *ppts, obs_property_t *p,
 	p = obs_properties_get(ppts, SETTING_DEVICE_INDEX);
 	obs_property_list_clear(p);
 
-	if (!(engine == 1 || engine > 3))
+	if (!(engine == ENGINE_DX9 || engine > ENGINE_OPENCL))
 	{
 		DeviceDX11 device;
 		std::vector<std::string> adapters;
@@ -1092,10 +1101,10 @@ static obs_properties_t *win_vceamf_props(void *unused)
 
 	list = obs_properties_add_list(props, SETTING_ENGINE, TEXT_ENGINE_TYPE,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(list, TEXT_ENGINE_OCL, 3);
-	obs_property_list_add_int(list, TEXT_ENGINE_DX11, 2);
-	obs_property_list_add_int(list, TEXT_ENGINE_DX9,  1);
-	obs_property_list_add_int(list, TEXT_ENGINE_HOST, 0);
+	obs_property_list_add_int(list, TEXT_ENGINE_OCL, ENGINE_OPENCL);
+	obs_property_list_add_int(list, TEXT_ENGINE_DX11, ENGINE_DX11);
+	obs_property_list_add_int(list, TEXT_ENGINE_DX9, ENGINE_DX9);
+	obs_property_list_add_int(list, TEXT_ENGINE_HOST, ENGINE_HOST);
 	obs_property_set_modified_callback(list, engine_type_modified);
 
 	list = obs_properties_add_list(props, SETTING_DEVICE_INDEX, TEXT_DEVICE_INDEX,
