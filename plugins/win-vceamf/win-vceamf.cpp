@@ -708,7 +708,7 @@ bool VCEEncoder::Encode(struct encoder_frame *frame, struct encoder_packet *pack
 		}
 
 		D3D11_MAPPED_SUBRESOURCE map;
-		HRESULT hr = d3dcontext->Map(pTexture, 0, D3D11_MAP::D3D11_MAP_WRITE/*_DISCARD*/, 0, &map);
+		HRESULT hr = d3dcontext->Map(pTexture, 0, D3D11_MAP::D3D11_MAP_WRITE_DISCARD, 0, &map);
 		if (hr == E_OUTOFMEMORY)
 		{
 			blog(LOG_ERROR, "Failed to map D3D11 texture: Out of memory.");
@@ -923,15 +923,12 @@ bool VCEEncoder::CreateDX11Texture(ID3D11Texture2D **pTex)
 	desc.Height = mParams.height;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
-	//Force fail
-	//desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-	//desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	//desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.SampleDesc.Count = 1;
-	desc.Usage = D3D11_USAGE_STAGING;
-	// 'Green' frames get thrown in for some reason
-	//desc.Usage = D3D11_USAGE_DYNAMIC;
+	//desc.Usage = D3D11_USAGE_STAGING;
+	// Dynamic for D3D11_MAP_WRITE_DISCARD, faster?
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
 
 	ID3D11DeviceContext *d3dcontext = nullptr;
 
