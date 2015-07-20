@@ -54,9 +54,7 @@ find_library(AMF_LIB_REL
 		/usr/lib /usr/local/lib /opt/local/lib /sw/lib
 	PATH_SUFFIXES
 		lib/amf/${_arch_dir}/Release/${VS}
-		../lib/amf/${_arch_dir}/Release/${VS}
-		dll/amf/${_arch_dir}/Release/${VS}
-		../dll/amf/${_arch_dir}/Release/${VS})
+		../lib/amf/${_arch_dir}/Release/${VS})
 		
 find_library(AMF_LIB_DBG
 	NAMES amf-core-windesktop${_lib_suffix} 
@@ -66,9 +64,7 @@ find_library(AMF_LIB_DBG
 		/usr/lib /usr/local/lib /opt/local/lib /sw/lib
 	PATH_SUFFIXES
 		lib/amf/${_arch_dir}/Debug/${VS}
-		../lib/amf/${_arch_dir}/Debug/${VS}
-		dll/amf/${_arch_dir}/Debug/${VS}
-		../dll/amf/${_arch_dir}/Debug/${VS})
+		../lib/amf/${_arch_dir}/Debug/${VS})
 
 set(AMF_BIN_CORE "amf-core-windesktop${_lib_suffix}.dll")
 set(AMF_BIN_VCE "amf-component-vce-windesktop${_lib_suffix}.dll")
@@ -102,7 +98,6 @@ mark_as_advanced(AMF_INCLUDE_DIR AMF_LIB_REL AMF_LIB_DBG)
 if(AMDAMF_FOUND)
 	set(AMDAMF_INCLUDE_DIRS ${AMF_INCLUDE_DIR} ${AMF_INCLUDE_DIR}/core)
 	set(AMDAMF_LIBRARIES optimized ${AMF_LIB_REL} debug ${AMF_LIB_DBG})
-	#set(AMDAMF_BINARIES optimized ${AMF_BIN_REL} debug ${AMF_BIN_DBG})
 	set(AMDAMF_BIN_FILES ${AMF_BIN_CORE_REL} ${AMF_BIN_VCE_REL})
 	set(AMDAMF_DEBUG_BIN_FILES ${AMF_BIN_CORE_DBG} ${AMF_BIN_VCE_DBG})
 	mark_as_advanced(AMDAMF_LIBRARIES)
