@@ -251,7 +251,7 @@ struct AMFParams
 	void *vceamf;
 };
 
-typedef struct
+typedef struct packetType
 {
 	DARRAY(uint8_t) packet;
 	int64_t pts;
@@ -1354,7 +1354,7 @@ static bool win_vceamf_sei(void *data, uint8_t **sei, size_t *size)
 }
 
 //TODO win_vceamf_video_info
-static bool win_vceamf_video_info(void *data, struct video_scale_info *info)
+static void win_vceamf_video_info(void *data, struct video_scale_info *info)
 {
 	struct win_vceamf *vceamf = static_cast<struct win_vceamf *>(data);
 	video_t *video = obs_encoder_video(vceamf->encoder);
@@ -1365,7 +1365,7 @@ static bool win_vceamf_video_info(void *data, struct video_scale_info *info)
 
 	if (//vid_info->format == VIDEO_FORMAT_I420 ||
 	    vid_info->format == VIDEO_FORMAT_NV12)
-		return false;
+		return;
 
 	info->format     = VIDEO_FORMAT_NV12;
 	info->width      = vid_info->width;
@@ -1376,7 +1376,7 @@ static bool win_vceamf_video_info(void *data, struct video_scale_info *info)
 
 	vceamf->colorspace = info->colorspace;
 	vceamf->range = info->range;
-	return true;
+	return;
 }
 
 void RegisterVCEAMF()
