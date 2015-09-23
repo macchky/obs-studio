@@ -950,9 +950,9 @@ bool VCEEncoder::CreateDX11Texture(ID3D11Texture2D **pTex)
 
 /* ------------------------------------------------------------------------- */
 
-static const char *win_vceamf_getname(void)
+static const char *win_vceamf_getname(void *)
 {
-	return "VCE AMF";
+	return obs_module_text("VCEAMF");
 }
 
 static void clear_data(struct win_vceamf *vceamf)
