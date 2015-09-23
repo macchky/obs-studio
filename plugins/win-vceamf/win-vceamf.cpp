@@ -59,64 +59,65 @@
 
 /* ------------------------------------------------------------------------- */
 
-#define AMF_PROP_IGNORE_PKT      L"ignore_pkt"
-#define SETTING_BITRATE          "bitrate"
-#define SETTING_BUF_SIZE         "buffer_size"
-#define SETTING_ENGINE           "engine"
-#define SETTING_DISCARD_FILLER   "discard_filler"
-#define SETTING_BFRAMES          "b_frames"
-#define SETTING_PROFILE          "profile"
-#define SETTING_PROFILE_LEVEL    "profile_level"
-#define SETTING_RCM              "rcm"
-#define SETTING_FORCE_HRD        "force_hrd"
-#define SETTING_ENABLE_FILLER    "enable_filler"
-#define SETTING_QUALITY_PRESET   "quality_preset"
-#define SETTING_QP_VALUE         "qp_value"
-#define SETTING_QP_CUSTOM        "qp_custom"
-#define SETTING_QP_MIN           "qp_min"
-#define SETTING_QP_MAX           "qp_max"
-#define SETTING_QP_I             "qp_i"
-#define SETTING_QP_P             "qp_p"
-#define SETTING_QP_B             "qp_b"
-#define SETTING_QP_B_DELTA       "qp_b_delta"
-#define SETTING_DEVICE_INDEX     "device_index"
-#define SETTING_KEYINT_SEC       "keyint_sec"
+#define AMF_PROP_IGNORE_PKT      L"IgnorePacket"
 
-#define TEXT_BITRATE             obs_module_text("Bitrate")
-#define TEXT_BUF_SIZE            obs_module_text("BufferSize")
-#define TEXT_ENGINE_TYPE         obs_module_text("Engine")
-#define TEXT_ENGINE_HOST         obs_module_text("Engine.Host")
-#define TEXT_ENGINE_DX9          obs_module_text("Engine.DX9")
-#define TEXT_ENGINE_DX11         obs_module_text("Engine.DX11")
-#define TEXT_ENGINE_OCL          obs_module_text("Engine.OCL")
-#define TEXT_DISCARD_FILLER      obs_module_text("DiscardFiller")
-#define TEXT_BFRAMES             obs_module_text("BFrames")
-#define TEXT_PROFILE             obs_module_text("Profile")
-#define TEXT_PROFILE_LEVEL       obs_module_text("Profile.Level")
-#define TEXT_PROFILE_BASE        obs_module_text("Profile.Base")
-#define TEXT_PROFILE_MAIN        obs_module_text("Profile.Main")
-#define TEXT_PROFILE_HIGH        obs_module_text("Profile.High")
-#define TEXT_RCM                 obs_module_text("RCM")
-#define TEXT_FORCE_HRD           obs_module_text("RCM.ForceHRD")
-#define TEXT_ENABLE_FILLER       obs_module_text("RCM.Filler")
-#define TEXT_RCM_CBR             obs_module_text("RCM.CBR")
-#define TEXT_RCM_CQP             obs_module_text("RCM.CQP")
-#define TEXT_RCM_PCVBR           obs_module_text("RCM.PCVBR")
-#define TEXT_RCM_LCVBR           obs_module_text("RCM.LCVBR")
-#define TEXT_QUALITY_PRESET      obs_module_text("QualityPreset")
-#define TEXT_QUALITY_SPEED       obs_module_text("QualityPreset.Speed")
-#define TEXT_QUALITY_BALANCED    obs_module_text("QualityPreset.Balanced")
-#define TEXT_QUALITY_QUALITY     obs_module_text("QualityPreset.Quality")
-#define TEXT_QP_VALUE            obs_module_text("RCM.QPValue")
-#define TEXT_QP_MIN              obs_module_text("RCM.QPMin")
-#define TEXT_QP_MAX              obs_module_text("RCM.QPMax")
-#define TEXT_QP_CUSTOM           obs_module_text("RCM.QPCustom")
-#define TEXT_QP_I                obs_module_text("RCM.QPI")
-#define TEXT_QP_P                obs_module_text("RCM.QPP")
-#define TEXT_QP_B                obs_module_text("RCM.QPB")
-#define TEXT_QP_B_DELTA          obs_module_text("RCM.QPBDelta")
-#define TEXT_DEVICE_INDEX        obs_module_text("DeviceIndex")
-#define TEXT_KEYINT_SEC          obs_module_text("KeyIntSeconds")
+#define S_BITRATE          "bitrate"
+#define S_BUF_SIZE         "buffer_size"
+#define S_ENGINE           "engine"
+#define S_DISCARD_FILLER   "discard_filler"
+#define S_BFRAMES          "b_frames"
+#define S_PROFILE          "profile"
+#define S_PROFILE_LEVEL    "profile_level"
+#define S_RCM              "rcm"
+#define S_FORCE_HRD        "force_hrd"
+#define S_ENABLE_FILLER    "enable_filler"
+#define S_QUALITY_PRESET   "quality_preset"
+#define S_QP_VALUE         "qp_value"
+#define S_QP_CUSTOM        "qp_custom"
+#define S_QP_MIN           "qp_min"
+#define S_QP_MAX           "qp_max"
+#define S_QP_I             "qp_i"
+#define S_QP_P             "qp_p"
+#define S_QP_B             "qp_b"
+#define S_QP_B_DELTA       "qp_b_delta"
+#define S_DEVICE_INDEX     "device_index"
+#define S_KEYINT_SEC       "keyint_sec"
+
+#define T_BITRATE             obs_module_text("Bitrate")
+#define T_BUF_SIZE            obs_module_text("BufferSize")
+#define T_ENGINE_TYPE         obs_module_text("Engine")
+#define T_ENGINE_HOST         obs_module_text("Engine.Host")
+#define T_ENGINE_DX9          obs_module_text("Engine.DX9")
+#define T_ENGINE_DX11         obs_module_text("Engine.DX11")
+#define T_ENGINE_OCL          obs_module_text("Engine.OCL")
+#define T_DISCARD_FILLER      obs_module_text("DiscardFiller")
+#define T_BFRAMES             obs_module_text("BFrames")
+#define T_PROFILE             obs_module_text("Profile")
+#define T_PROFILE_LEVEL       obs_module_text("Profile.Level")
+#define T_PROFILE_BASE        obs_module_text("Profile.Base")
+#define T_PROFILE_MAIN        obs_module_text("Profile.Main")
+#define T_PROFILE_HIGH        obs_module_text("Profile.High")
+#define T_RCM                 obs_module_text("RCM")
+#define T_FORCE_HRD           obs_module_text("RCM.ForceHRD")
+#define T_ENABLE_FILLER       obs_module_text("RCM.Filler")
+#define T_RCM_CBR             obs_module_text("RCM.CBR")
+#define T_RCM_CQP             obs_module_text("RCM.CQP")
+#define T_RCM_PCVBR           obs_module_text("RCM.PCVBR")
+#define T_RCM_LCVBR           obs_module_text("RCM.LCVBR")
+#define T_QUALITY_PRESET      obs_module_text("QualityPreset")
+#define T_QUALITY_SPEED       obs_module_text("QualityPreset.Speed")
+#define T_QUALITY_BALANCED    obs_module_text("QualityPreset.Balanced")
+#define T_QUALITY_QUALITY     obs_module_text("QualityPreset.Quality")
+#define T_QP_VALUE            obs_module_text("RCM.QPValue")
+#define T_QP_MIN              obs_module_text("RCM.QPMin")
+#define T_QP_MAX              obs_module_text("RCM.QPMax")
+#define T_QP_CUSTOM           obs_module_text("RCM.QPCustom")
+#define T_QP_I                obs_module_text("RCM.QPI")
+#define T_QP_P                obs_module_text("RCM.QPP")
+#define T_QP_B                obs_module_text("RCM.QPB")
+#define T_QP_B_DELTA          obs_module_text("RCM.QPBDelta")
+#define T_DEVICE_INDEX        obs_module_text("DeviceIndex")
+#define T_KEYINT_SEC          obs_module_text("KeyIntSeconds")
 
 // Maybe unnecessery
 #define MS_TO_100NS      10000
@@ -537,7 +538,7 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 		return false;
 	}
 
-	int keyint = (int)obs_data_get_int(settings, SETTING_KEYINT_SEC);
+	int keyint = (int)obs_data_get_int(settings, S_KEYINT_SEC);
 	if (keyint == 0)
 		keyint = 2;
 
@@ -546,18 +547,18 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 	RETURNIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_IDR_PERIOD);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD,
-			obs_data_get_int(settings, SETTING_RCM));
+			obs_data_get_int(settings, S_RCM));
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_ENFORCE_HRD,
-			obs_data_get_bool(settings, SETTING_FORCE_HRD));
+			obs_data_get_bool(settings, S_FORCE_HRD));
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_ENFORCE_HRD);
 
 	mEncoder->SetProperty(AMF_VIDEO_ENCODER_FILLER_DATA_ENABLE,
-			obs_data_get_bool(settings, SETTING_ENABLE_FILLER));
+			obs_data_get_bool(settings, S_ENABLE_FILLER));
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_FILLER_DATA_ENABLE);
 
-	int bitrate = (int)obs_data_get_int(settings, SETTING_BITRATE);
+	int bitrate = (int)obs_data_get_int(settings, S_BITRATE);
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_TARGET_BITRATE, bitrate * 1000);
 	RETURNIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_TARGET_BITRATE);
 
@@ -565,22 +566,22 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_PEAK_BITRATE);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_VBV_BUFFER_SIZE,
-			(int)obs_data_get_int(settings, SETTING_BUF_SIZE) * 1000);
+			(int)obs_data_get_int(settings, S_BUF_SIZE) * 1000);
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_VBV_BUFFER_SIZE);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_FRAMERATE,
 			AMFConstructRate(params.fps_num, params.fps_den));
 	RETURNIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_FRAMERATE);
 
-	int qp = (int)obs_data_get_int(settings, SETTING_QP_VALUE);
+	int qp = (int)obs_data_get_int(settings, S_QP_VALUE);
 	int qpI, qpP, qpB, qpBDelta = 4;
 
-	if (obs_data_get_bool(settings, SETTING_QP_CUSTOM))
+	if (obs_data_get_bool(settings, S_QP_CUSTOM))
 	{
-		qpI = (int)obs_data_get_int(settings, SETTING_QP_I);
-		qpP = (int)obs_data_get_int(settings, SETTING_QP_P);
-		qpB = (int)obs_data_get_int(settings, SETTING_QP_B);
-		qpBDelta = (int)obs_data_get_int(settings, SETTING_QP_B_DELTA);
+		qpI = (int)obs_data_get_int(settings, S_QP_I);
+		qpP = (int)obs_data_get_int(settings, S_QP_P);
+		qpB = (int)obs_data_get_int(settings, S_QP_B);
+		qpBDelta = (int)obs_data_get_int(settings, S_QP_B_DELTA);
 	}
 	else
 	{
@@ -601,7 +602,7 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 	//LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_REF_B_PIC_DELTA_QP);
 
 	res = mEncoder->SetProperty(AMF_VIDEO_ENCODER_B_PIC_PATTERN,
-			obs_data_get_int(settings, SETTING_BFRAMES));
+			obs_data_get_int(settings, S_BFRAMES));
 	LOGIFFAILED(res, STR_FAILED_TO_SET_PROPERTY, AMF_VIDEO_ENCODER_B_PIC_PATTERN);
 
 	PrintProps(mEncoder);
@@ -977,28 +978,28 @@ static void win_vceamf_destroy(void *data)
 
 static void win_vceamf_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_int   (settings, SETTING_BITRATE, 5000);
-	obs_data_set_default_int   (settings, SETTING_BUF_SIZE, 5000);
-	obs_data_set_default_int   (settings, SETTING_QP_VALUE, 25);
-	obs_data_set_default_int   (settings, SETTING_QP_MIN, 18);
-	obs_data_set_default_int   (settings, SETTING_QP_MAX, 51);
-	obs_data_set_default_int   (settings, SETTING_QP_I, 25);
-	obs_data_set_default_int   (settings, SETTING_QP_P, 25);
-	obs_data_set_default_int   (settings, SETTING_QP_B, 25);
-	obs_data_set_default_int   (settings, SETTING_QP_B_DELTA, 4);
-	obs_data_set_default_int   (settings, SETTING_RCM,
+	obs_data_set_default_int   (settings, S_BITRATE, 5000);
+	obs_data_set_default_int   (settings, S_BUF_SIZE, 5000);
+	obs_data_set_default_int   (settings, S_QP_VALUE, 25);
+	obs_data_set_default_int   (settings, S_QP_MIN, 18);
+	obs_data_set_default_int   (settings, S_QP_MAX, 51);
+	obs_data_set_default_int   (settings, S_QP_I, 25);
+	obs_data_set_default_int   (settings, S_QP_P, 25);
+	obs_data_set_default_int   (settings, S_QP_B, 25);
+	obs_data_set_default_int   (settings, S_QP_B_DELTA, 4);
+	obs_data_set_default_int   (settings, S_RCM,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CBR);
-	obs_data_set_default_int   (settings, SETTING_KEYINT_SEC, 2);
-	obs_data_set_default_int   (settings, SETTING_BFRAMES, 0);
-	obs_data_set_default_int   (settings, SETTING_ENGINE, ENGINE_OPENCL);
-	obs_data_set_default_int   (settings, SETTING_PROFILE,
+	obs_data_set_default_int   (settings, S_KEYINT_SEC, 2);
+	obs_data_set_default_int   (settings, S_BFRAMES, 0);
+	obs_data_set_default_int   (settings, S_ENGINE, ENGINE_OPENCL);
+	obs_data_set_default_int   (settings, S_PROFILE,
 			AMF_VIDEO_ENCODER_PROFILE_MAIN);
-	obs_data_set_default_int   (settings, SETTING_PROFILE_LEVEL, 41);
-	obs_data_set_default_int   (settings, SETTING_QUALITY_PRESET,
+	obs_data_set_default_int   (settings, S_PROFILE_LEVEL, 41);
+	obs_data_set_default_int   (settings, S_QUALITY_PRESET,
 			AMF_VIDEO_ENCODER_QUALITY_PRESET_SPEED);
-	obs_data_set_default_bool  (settings, SETTING_ENABLE_FILLER, true);
-	obs_data_set_default_bool  (settings, SETTING_FORCE_HRD, true);
-	obs_data_set_default_bool  (settings, SETTING_DISCARD_FILLER, false);
+	obs_data_set_default_bool  (settings, S_ENABLE_FILLER, true);
+	obs_data_set_default_bool  (settings, S_FORCE_HRD, true);
+	obs_data_set_default_bool  (settings, S_DISCARD_FILLER, false);
 }
 
 static inline void add_strings(obs_property_t *list, const char *const *strings)
@@ -1012,20 +1013,20 @@ static inline void add_strings(obs_property_t *list, const char *const *strings)
 static bool rcm_modified(obs_properties_t *ppts, obs_property_t *p,
 	obs_data_t *settings)
 {
-	int rcm = (int)obs_data_get_int(settings, SETTING_RCM);
-	bool qp_custom = obs_data_get_bool(settings, SETTING_QP_CUSTOM);
+	int rcm = (int)obs_data_get_int(settings, S_RCM);
+	bool qp_custom = obs_data_get_bool(settings, S_QP_CUSTOM);
 	bool showQPs = (rcm == AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CONSTRAINED_QP);
-	p = obs_properties_get(ppts, SETTING_BITRATE);
+	p = obs_properties_get(ppts, S_BITRATE);
 	obs_property_set_visible(p, !showQPs);
-	p = obs_properties_get(ppts, SETTING_QP_VALUE);
+	p = obs_properties_get(ppts, S_QP_VALUE);
 	obs_property_set_visible(p, showQPs && !qp_custom);
-	p = obs_properties_get(ppts, SETTING_QP_I);
+	p = obs_properties_get(ppts, S_QP_I);
 	obs_property_set_visible(p, showQPs && qp_custom);
-	p = obs_properties_get(ppts, SETTING_QP_P);
+	p = obs_properties_get(ppts, S_QP_P);
 	obs_property_set_visible(p, showQPs && qp_custom);
-	p = obs_properties_get(ppts, SETTING_QP_B);
+	p = obs_properties_get(ppts, S_QP_B);
 	obs_property_set_visible(p, showQPs && qp_custom);
-	//p = obs_properties_get(ppts, SETTING_QP_B_DELTA);
+	//p = obs_properties_get(ppts, S_QP_B_DELTA);
 	//obs_property_set_visible(p, showQPs && qp_custom);
 	return true;
 }
@@ -1033,9 +1034,9 @@ static bool rcm_modified(obs_properties_t *ppts, obs_property_t *p,
 static bool engine_type_modified(obs_properties_t *ppts, obs_property_t *p,
 	obs_data_t *settings)
 {
-	int engine = (int)obs_data_get_int(settings, SETTING_ENGINE);
-	int oldindex = (int)obs_data_get_int(settings, SETTING_DEVICE_INDEX);
-	p = obs_properties_get(ppts, SETTING_DEVICE_INDEX);
+	int engine = (int)obs_data_get_int(settings, S_ENGINE);
+	int oldindex = (int)obs_data_get_int(settings, S_DEVICE_INDEX);
+	p = obs_properties_get(ppts, S_DEVICE_INDEX);
 	obs_property_list_clear(p);
 
 	if (!(engine == ENGINE_DX9 || engine > ENGINE_OPENCL))
@@ -1052,7 +1053,7 @@ static bool engine_type_modified(obs_properties_t *ppts, obs_property_t *p,
 
 		if (oldindex >= index)
 			oldindex = 0;
-		obs_data_set_int(settings, SETTING_DEVICE_INDEX, oldindex);
+		obs_data_set_int(settings, S_DEVICE_INDEX, oldindex);
 	}
 
 	return true;
@@ -1065,58 +1066,57 @@ static obs_properties_t *win_vceamf_props(void *unused)
 	obs_properties_t *props = obs_properties_create();
 	obs_property_t *list, *p;
 
-	obs_properties_add_int(props, SETTING_BITRATE, TEXT_BITRATE, 50, 100000, 1);
-	obs_properties_add_int(props, SETTING_BUF_SIZE, TEXT_BUF_SIZE, 50, 100000,
-		1);
+	obs_properties_add_int(props, S_BITRATE, T_BITRATE, 50, 100000, 1);
+	obs_properties_add_int(props, S_BUF_SIZE, T_BUF_SIZE, 50, 100000, 1);
 
-	p = obs_properties_add_int(props, SETTING_QP_VALUE, TEXT_QP_VALUE, 0, 51, 1);
+	p = obs_properties_add_int(props, S_QP_VALUE, T_QP_VALUE, 0, 51, 1);
 	obs_property_set_visible(p, false);
-	p = obs_properties_add_int(props, SETTING_QP_I, TEXT_QP_I, 0, 51, 1);
+	p = obs_properties_add_int(props, S_QP_I, T_QP_I, 0, 51, 1);
 	obs_property_set_visible(p, false);
-	p = obs_properties_add_int(props, SETTING_QP_P, TEXT_QP_P, 0, 51, 1);
+	p = obs_properties_add_int(props, S_QP_P, T_QP_P, 0, 51, 1);
 	obs_property_set_visible(p, false);
-	p = obs_properties_add_int(props, SETTING_QP_B, TEXT_QP_B, 0, 51, 1);
+	p = obs_properties_add_int(props, S_QP_B, T_QP_B, 0, 51, 1);
 	obs_property_set_visible(p, false);
-	p = obs_properties_add_int(props, SETTING_QP_B_DELTA, TEXT_QP_B_DELTA, 0, 51, 1);
+	p = obs_properties_add_int(props, S_QP_B_DELTA, T_QP_B_DELTA, 0, 51, 1);
 	//obs_property_set_visible(p, false);
 
-	obs_properties_add_int(props, SETTING_QP_MIN, TEXT_QP_MIN, 0, 51, 1);
-	obs_properties_add_int(props, SETTING_QP_MAX, TEXT_QP_MAX, 0, 51, 1);
-	obs_properties_add_int(props, SETTING_KEYINT_SEC, TEXT_KEYINT_SEC, 0, 20, 1);
+	obs_properties_add_int(props, S_QP_MIN, T_QP_MIN, 0, 51, 1);
+	obs_properties_add_int(props, S_QP_MAX, T_QP_MAX, 0, 51, 1);
+	obs_properties_add_int(props, S_KEYINT_SEC, T_KEYINT_SEC, 0, 20, 1);
 
-	list = obs_properties_add_list(props, SETTING_RCM, TEXT_RCM,
+	list = obs_properties_add_list(props, S_RCM, T_RCM,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(list, TEXT_RCM_CQP,
+	obs_property_list_add_int(list, T_RCM_CQP,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CONSTRAINED_QP);
-	obs_property_list_add_int(list, TEXT_RCM_CBR,
+	obs_property_list_add_int(list, T_RCM_CBR,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CBR);
-	obs_property_list_add_int(list, TEXT_RCM_PCVBR,
+	obs_property_list_add_int(list, T_RCM_PCVBR,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_PEAK_CONSTRAINED_VBR);
-	obs_property_list_add_int(list, TEXT_RCM_LCVBR,
+	obs_property_list_add_int(list, T_RCM_LCVBR,
 			AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_LATENCY_CONSTRAINED_VBR);
 	obs_property_set_modified_callback(list, rcm_modified);
 
-	list = obs_properties_add_list(props, SETTING_ENGINE, TEXT_ENGINE_TYPE,
+	list = obs_properties_add_list(props, S_ENGINE, T_ENGINE_TYPE,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(list, TEXT_ENGINE_OCL, ENGINE_OPENCL);
-	obs_property_list_add_int(list, TEXT_ENGINE_DX11, ENGINE_DX11);
-	obs_property_list_add_int(list, TEXT_ENGINE_DX9, ENGINE_DX9);
-	obs_property_list_add_int(list, TEXT_ENGINE_HOST, ENGINE_HOST);
+	obs_property_list_add_int(list, T_ENGINE_OCL, ENGINE_OPENCL);
+	obs_property_list_add_int(list, T_ENGINE_DX11, ENGINE_DX11);
+	obs_property_list_add_int(list, T_ENGINE_DX9, ENGINE_DX9);
+	obs_property_list_add_int(list, T_ENGINE_HOST, ENGINE_HOST);
 	obs_property_set_modified_callback(list, engine_type_modified);
 
-	list = obs_properties_add_list(props, SETTING_DEVICE_INDEX, TEXT_DEVICE_INDEX,
+	list = obs_properties_add_list(props, S_DEVICE_INDEX, T_DEVICE_INDEX,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
-	list = obs_properties_add_list(props, SETTING_PROFILE, TEXT_PROFILE,
+	list = obs_properties_add_list(props, S_PROFILE, T_PROFILE,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(list, TEXT_PROFILE_BASE,
+	obs_property_list_add_int(list, T_PROFILE_BASE,
 			AMF_VIDEO_ENCODER_PROFILE_BASELINE);
-	obs_property_list_add_int(list, TEXT_PROFILE_MAIN,
+	obs_property_list_add_int(list, T_PROFILE_MAIN,
 			AMF_VIDEO_ENCODER_PROFILE_MAIN);
-	obs_property_list_add_int(list, TEXT_PROFILE_HIGH,
+	obs_property_list_add_int(list, T_PROFILE_HIGH,
 			AMF_VIDEO_ENCODER_PROFILE_HIGH);
 
-	list = obs_properties_add_list(props, SETTING_PROFILE_LEVEL, TEXT_PROFILE_LEVEL,
+	list = obs_properties_add_list(props, S_PROFILE_LEVEL, T_PROFILE_LEVEL,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(list, "3.0", 30);
 	obs_property_list_add_int(list, "3.1", 31);
@@ -1127,57 +1127,23 @@ static obs_properties_t *win_vceamf_props(void *unused)
 	obs_property_list_add_int(list, "5.1", 51);
 	//obs_property_list_add_int(list, "5.2", 52);
 
-	list = obs_properties_add_list(props, SETTING_QUALITY_PRESET, TEXT_QUALITY_PRESET,
+	list = obs_properties_add_list(props, S_QUALITY_PRESET, T_QUALITY_PRESET,
 			OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(list, TEXT_QUALITY_BALANCED,
+	obs_property_list_add_int(list, T_QUALITY_BALANCED,
 			AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED);
-	obs_property_list_add_int(list, TEXT_QUALITY_SPEED,
+	obs_property_list_add_int(list, T_QUALITY_SPEED,
 			AMF_VIDEO_ENCODER_QUALITY_PRESET_SPEED);
-	obs_property_list_add_int(list, TEXT_QUALITY_QUALITY,
+	obs_property_list_add_int(list, T_QUALITY_QUALITY,
 			AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY);
 
-	obs_properties_add_int(props, SETTING_BFRAMES, TEXT_BFRAMES, 0, 16, 1);
-	p = obs_properties_add_bool(props, SETTING_QP_CUSTOM, TEXT_QP_CUSTOM);
+	obs_properties_add_int(props, S_BFRAMES, T_BFRAMES, 0, 16, 1);
+	p = obs_properties_add_bool(props, S_QP_CUSTOM, T_QP_CUSTOM);
 	obs_property_set_modified_callback(p, rcm_modified);
-	obs_properties_add_bool(props, SETTING_FORCE_HRD, TEXT_FORCE_HRD);
-	obs_properties_add_bool(props, SETTING_ENABLE_FILLER, TEXT_ENABLE_FILLER);
-	obs_properties_add_bool(props, SETTING_DISCARD_FILLER, TEXT_DISCARD_FILLER);
+	obs_properties_add_bool(props, S_FORCE_HRD, T_FORCE_HRD);
+	obs_properties_add_bool(props, S_ENABLE_FILLER, T_ENABLE_FILLER);
+	obs_properties_add_bool(props, S_DISCARD_FILLER, T_DISCARD_FILLER);
 
 	return props;
-}
-
-static bool getparam(const char *param, char **name, const char **value)
-{
-	const char *assign;
-
-	if (!param || !*param || (*param == '='))
-		return false;
-
-	assign = strchr(param, '=');
-	if (!assign || !*assign || !*(assign+1))
-		return false;
-
-	*name  = bstrdup_n(param, assign-param);
-	*value = assign+1;
-	return true;
-}
-
-static const char *validate(struct win_vceamf *vceamf,
-		const char *val, const char *name,
-		const char *const *list)
-{
-	if (!val || !*val)
-		return val;
-
-	while (*list) {
-		if (strcmp(val, *list) == 0)
-			return val;
-
-		list++;
-	}
-
-	warn("Invalid %s: %s", name, val);
-	return NULL;
 }
 
 static inline void set_param(struct win_vceamf *vceamf, const char *param)
@@ -1203,11 +1169,11 @@ static void update_params(struct win_vceamf *vceamf, obs_data_t *settings,
 	video_t *video = obs_encoder_video(vceamf->encoder);
 	const struct video_output_info *voi = video_output_get_info(video);
 
-	vceamf->params.engine = (char)obs_data_get_int(settings, SETTING_ENGINE);
+	vceamf->params.engine = (char)obs_data_get_int(settings, S_ENGINE);
 	vceamf->params.profile = (AMF_VIDEO_ENCODER_PROFILE_ENUM)
-			obs_data_get_int(settings, SETTING_PROFILE);
-	vceamf->params.profile_level = (int)obs_data_get_int(settings, SETTING_PROFILE_LEVEL);
-	vceamf->params.adapter = (int)obs_data_get_int(settings, SETTING_DEVICE_INDEX);
+			obs_data_get_int(settings, S_PROFILE);
+	vceamf->params.profile_level = (int)obs_data_get_int(settings, S_PROFILE_LEVEL);
+	vceamf->params.adapter = (int)obs_data_get_int(settings, S_DEVICE_INDEX);
 
 	vceamf->params.fps_num = voi->fps_num;
 	vceamf->params.fps_den = voi->fps_den;
@@ -1321,6 +1287,7 @@ static bool win_vceamf_encode(void *data, struct encoder_frame *frame,
 	if (frame)
 	{
 		*received_packet = encoder->Encode(frame, packet);
+		info("received_packet: %d\n", *received_packet);
 	}
 
 	return true;
