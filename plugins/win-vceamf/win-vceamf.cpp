@@ -1146,23 +1146,6 @@ static obs_properties_t *win_vceamf_props(void *unused)
 	return props;
 }
 
-static inline void set_param(struct win_vceamf *vceamf, const char *param)
-{
-	UNUSED_PARAMETER(vceamf);
-	UNUSED_PARAMETER(param);
-}
-
-static void log_vce(void *param, int level, const char *format, va_list args)
-{
-	struct win_vceamf *vceamf = static_cast<struct win_vceamf *>(param);
-	char str[1024];
-
-	vsnprintf(str, 1024, format, args);
-	info("%s", str);
-
-	UNUSED_PARAMETER(level);
-}
-
 static void update_params(struct win_vceamf *vceamf, obs_data_t *settings,
 		char **params)
 {
@@ -1307,43 +1290,18 @@ static bool win_vceamf_extra_data(void *data, uint8_t **extra_data, size_t *size
 
 static bool win_vceamf_sei(void *data, uint8_t **sei, size_t *size)
 {
-	struct win_vceamf *vceamf = static_cast<struct win_vceamf *>(data);
-	UNUSED_PARAMETER(vceamf);
+	UNUSED_PARAMETER(data);
 	UNUSED_PARAMETER(sei);
 	UNUSED_PARAMETER(size);
-	return false;
-	/*if (!vceamf->context)
-		return false;
 
-	*sei  = vceamf->sei;
-	*size = vceamf->sei_size;
-	return true;*/
+	return false;
 }
 
 //TODO win_vceamf_video_info
 static void win_vceamf_video_info(void *data, struct video_scale_info *info)
 {
-	struct win_vceamf *vceamf = static_cast<struct win_vceamf *>(data);
-	video_t *video = obs_encoder_video(vceamf->encoder);
-	const struct video_output_info *vid_info = video_output_get_info(video);
-
-	vceamf->colorspace = vid_info->colorspace;
-	vceamf->range = vid_info->range;
-
-	if (//vid_info->format == VIDEO_FORMAT_I420 ||
-	    vid_info->format == VIDEO_FORMAT_NV12)
-		return;
-
-	info->format     = VIDEO_FORMAT_NV12;
-	info->width      = vid_info->width;
-	info->height     = vid_info->height;
-	//TODO VIDEO_RANGE_PARTIAL or FULL?
-	info->range      = VIDEO_RANGE_PARTIAL;
-	info->colorspace = VIDEO_CS_709;
-
-	vceamf->colorspace = info->colorspace;
-	vceamf->range = info->range;
-	return;
+	UNUSED_PARAMETER(data);
+	info->format = VIDEO_FORMAT_NV12;
 }
 
 void RegisterVCEAMF()
