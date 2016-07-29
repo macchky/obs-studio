@@ -1270,7 +1270,9 @@ static bool win_vceamf_encode(void *data, struct encoder_frame *frame,
 	if (frame)
 	{
 		*received_packet = encoder->Encode(frame, packet);
+#ifndef NDEBUG
 		info("received_packet: %d\n", *received_packet);
+#endif
 	}
 
 	return true;
