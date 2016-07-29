@@ -119,14 +119,14 @@ bool DeviceOCL::CreateImages(enum video_format format, size_t width, size_t heig
 
 	if (format == VIDEO_FORMAT_NV12)
 	{
-		mImageY = new cl::Image2D(*mContext, CL_MEM_WRITE_ONLY,
+		mImageY = new cl::Image2D(*mContext, CL_MEM_READ_WRITE,
 			cl::ImageFormat(CL_R, CL_UNSIGNED_INT8), mAlignedW, mAlignedH, 0,
 			nullptr, &status);
 
 		mUVAlignedW = mAlignedW / 2;
 		mUVAlignedH = (mAlignedH + 1) / 2;
 
-		mImageUV = new cl::Image2D(*mContext, CL_MEM_WRITE_ONLY,
+		mImageUV = new cl::Image2D(*mContext, CL_MEM_READ_WRITE,
 			cl::ImageFormat(CL_RG, CL_UNSIGNED_INT8), mUVAlignedW, mUVAlignedH, 0,
 			nullptr, &status);
 
