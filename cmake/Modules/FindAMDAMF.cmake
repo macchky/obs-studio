@@ -21,22 +21,26 @@ endmacro(getenv_path)
 
 getenv_path(USERPROFILE)
 getenv_path(AMDMediaSDK)
+getenv_path(ProgramFiles)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(_lib_suffix 64)
 	set(_arch_dir x86_64)
+	set(_arch_dir_pkg x64) # From Media Package installer
 else()
 	set(_lib_suffix 32)
 	set(_arch_dir x86)
+	set(_arch_dir_pkg x86)
 endif()
 
 SET(AMF_HINTS 
+	"${ProgramFiles}/AMD/Media Package/1.0 PR"
 	"${AMDMediaSDK}"
 	"../../../AMD Media SDK/1.1"
 	"../../../AMD Media SDK/1.1 Beta"
 	"${USERPROFILE}/AMD Media SDK/1.1"
 	"${USERPROFILE}/AMD Media SDK/1.1 Beta")
-	
+
 find_path(AMF_INCLUDE_DIR
 	NAMES Core.h
 	HINTS
@@ -77,6 +81,7 @@ foreach(bin CORE VCE)
 		PATHS
 			/usr/lib /usr/local/lib /opt/local/lib /sw/lib
 		PATH_SUFFIXES
+			${_arch_dir_pkg}
 			dll/amf/${_arch_dir}/Release/${VS}
 			../dll/amf/${_arch_dir}/Release/${VS})
 			
@@ -87,6 +92,7 @@ foreach(bin CORE VCE)
 		PATHS
 			/usr/lib /usr/local/lib /opt/local/lib /sw/lib
 		PATH_SUFFIXES
+			${_arch_dir_pkg} # maybe not
 			dll/amf/${_arch_dir}/Debug/${VS}
 			../dll/amf/${_arch_dir}/Debug/${VS})
 endforeach()
