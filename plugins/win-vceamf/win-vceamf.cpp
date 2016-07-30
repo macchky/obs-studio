@@ -612,8 +612,14 @@ bool VCEEncoder::ApplySettings(AMFParams &params, obs_data_t *settings)
 
 darray VCEEncoder::GetHeader()
 {
-	//XXX Nasty hack. The whole thing. If only mEncoder->GetProperty(L"ExtraData") worked.
-	if (!mHdrPacket.num)
+	amf::AMFVariant var;
+	AMF_RESULT res = mEncoder->GetProperty(AMF_VIDEO_ENCODER_EXTRADATA, &var);
+	if (res == AMF_OK && var.type == amf::AMF_VARIANT_INTERFACE)
+	{
+		amf::AMFBufferPtr buf(var.pInterface);
+		da_push_back_array(mHdrPacket, buf->GetNative(), buf->GetSize());
+	}
+	else if (!mHdrPacket.num)
 	{
 		AMF_RESULT res;
 		amf::AMFSurfacePtr pSurf;
