@@ -10,7 +10,7 @@ environment:
 install:
   - git submodule update --init --recursive
   - choco install -y curl
-  - set PATH="C:\Program Files\7-Zip";
+  - set PATH="C:\Program Files\7-Zip";%PATH%
   - curl -kLO https://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-20160809-369ed11-win64-dev.zip
   - 7z x ffmpeg-20160809-369ed11-win64-dev.zip
   - set FFMPEG_PATH=%CD%\ffmpeg-20160809-369ed11-win64-dev.zip
