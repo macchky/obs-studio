@@ -26,4 +26,9 @@ install:
   - curl -kLO https://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-20160809-369ed11-win64-dev.zip
   - 7z x ffmpeg-20160809-369ed11-win64-dev.zip
   - set FFmpegPath=%CD%\ffmpeg-20160809-369ed11-win64-dev
+  - curl -kLO https://curl.haxx.se/download/curl-7.50.1.zip
+  - 7z x curl-7.50.1.zip
+  - set curlPath=%CD%\curl-7.50.1
+  - git clone http://git.videolan.org/git/x264.git
+  - set x264Path=%CD%\x264
 
